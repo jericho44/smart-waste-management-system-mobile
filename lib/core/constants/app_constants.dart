@@ -21,4 +21,3 @@ class AppConstants {
   static const String headerRequestId = 'X-Request-ID';
   static const String headerAuthorization = 'Authorization';
 }
-

@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../authentication/presentation/state/auth_notifier.dart';
 
-/// Foundation dashboard screen showing summary overview.
-class DashboardScreen extends StatelessWidget {
+/// User dashboard screen showing overview metrics and citizen greeting.
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authNotifierProvider);
+    final userName = authState.user?.name ?? 'Citizen';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -33,23 +38,30 @@ class DashboardScreen extends StatelessWidget {
                     CircleAvatar(
                       radius: 24,
                       backgroundColor: AppColors.primaryLight,
-                      child: const Icon(Icons.person, color: AppColors.primary),
+                      child: Text(
+                        userName.isNotEmpty ? userName[0].toUpperCase() : 'C',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 14),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Hello, Citizen',
-                            style: TextStyle(
+                            'Hello, $userName',
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          SizedBox(height: 2),
-                          Text(
+                          const SizedBox(height: 2),
+                          const Text(
                             'Let\'s keep our community clean today',
                             style: TextStyle(
                               fontSize: 13,

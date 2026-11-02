@@ -30,4 +30,3 @@ class ApiEndpoints {
   static String reportDeleteImage(String reportUuid, String imageUuid) =>
       '/reports/$reportUuid/images/$imageUuid';
 }
-

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/config/app_config.dart';
+import '../../features/authentication/presentation/state/auth_notifier.dart';
 import '../../shared/models/api_response.dart';
 import '../errors/app_exception.dart';
 import '../storage/secure_storage_service.dart';
@@ -11,23 +12,29 @@ import 'api_interceptors.dart';
 class ApiClient {
   final Dio _dio;
 
-  ApiClient({Dio? dio, required SecureStorageService storageService})
-    : _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              baseUrl: AppConfig.apiBaseUrl,
-              connectTimeout: Duration(
-                milliseconds: AppConfig.connectTimeoutMs,
-              ),
-              receiveTimeout: Duration(
-                milliseconds: AppConfig.receiveTimeoutMs,
-              ),
-              sendTimeout: Duration(milliseconds: AppConfig.sendTimeoutMs),
-              responseType: ResponseType.json,
-              headers: {'Accept': 'application/json'},
-            ),
-          ) {
+  /// Optional callback invoked whenever a 401 Unauthorized response is received
+  void Function()? onUnauthorized;
+
+  ApiClient({
+    Dio? dio,
+    required SecureStorageService storageService,
+    this.onUnauthorized,
+  }) : _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               baseUrl: AppConfig.apiBaseUrl,
+               connectTimeout: Duration(
+                 milliseconds: AppConfig.connectTimeoutMs,
+               ),
+               receiveTimeout: Duration(
+                 milliseconds: AppConfig.receiveTimeoutMs,
+               ),
+               sendTimeout: Duration(milliseconds: AppConfig.sendTimeoutMs),
+               responseType: ResponseType.json,
+               headers: {'Accept': 'application/json'},
+             ),
+           ) {
     _dio.interceptors.addAll([
       AuthInterceptor(storageService),
       LoggingInterceptor(),
@@ -240,6 +247,7 @@ class ApiClient {
       case DioExceptionType.badResponse:
         switch (statusCode) {
           case 401:
+            onUnauthorized?.call();
             return UnauthorizedException(
               message: message,
               statusCode: 401,
@@ -299,8 +307,14 @@ class ApiClient {
   }
 }
 
-/// Riverpod provider for ApiClient
+/// Riverpod provider for ApiClient with centralized 401 session expiry handling
 final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.watch(secureStorageServiceProvider);
-  return ApiClient(storageService: storage);
+  final client = ApiClient(storageService: storage);
+
+  client.onUnauthorized = () {
+    ref.read(authNotifierProvider.notifier).handleUnauthorized();
+  };
+
+  return client;
 });

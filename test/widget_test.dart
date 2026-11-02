@@ -3,18 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_waste_mobile/app/app.dart';
 import 'package:smart_waste_mobile/app/config/app_config.dart';
-import 'package:smart_waste_mobile/core/storage/secure_storage_service.dart';
+import 'package:smart_waste_mobile/features/authentication/domain/models/authenticated_user.dart';
+import 'package:smart_waste_mobile/features/authentication/presentation/state/auth_notifier.dart';
+import 'package:smart_waste_mobile/features/authentication/presentation/state/auth_state.dart';
 
-class MockSecureStorageService extends SecureStorageService {
-  final bool mockHasToken;
+class FakeAuthNotifier extends AuthNotifier {
+  final AuthState _targetState;
 
-  MockSecureStorageService({this.mockHasToken = false});
+  FakeAuthNotifier(this._targetState);
 
   @override
-  Future<bool> hasToken() async => mockHasToken;
+  AuthState build() => AuthState.initial();
 
   @override
-  Future<String?> getToken() async => mockHasToken ? 'mock_token' : null;
+  Future<void> checkAuthStatus() async {
+    await Future<void>.delayed(Duration.zero);
+    state = _targetState;
+  }
 }
 
 void main() {
@@ -23,31 +28,63 @@ void main() {
     await AppConfig.initialize();
   });
 
-  testWidgets('Smart Waste Mobile startup, splash and login route test', (
+  testWidgets('Unauthenticated startup: Splash navigates to LoginScreen', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          secureStorageServiceProvider.overrideWithValue(
-            MockSecureStorageService(mockHasToken: false),
+          authNotifierProvider.overrideWith(
+            () => FakeAuthNotifier(AuthState.unauthenticated()),
           ),
         ],
         child: const SmartWasteApp(),
       ),
     );
 
-    // Verify that the splash screen shows the recycling icon and community message
+    // Initial Splash Screen display
     expect(find.byIcon(Icons.recycling_rounded), findsOneWidget);
     expect(find.text('Community Waste Monitoring Platform'), findsOneWidget);
 
-    // Complete splash timer and transition
-    await tester.pump(const Duration(milliseconds: 1600));
+    // Complete splash delay
+    await tester.pump(const Duration(milliseconds: 1300));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 200));
 
-    // Verify navigation landed on LoginScreen
+    // Arrived at Login Screen
     expect(find.text('Welcome Back'), findsOneWidget);
     expect(find.text('Sign In'), findsOneWidget);
+    expect(find.text('Citizen User'), findsOneWidget);
+  });
+
+  testWidgets('Authenticated startup: Splash navigates to DashboardScreen', (
+    WidgetTester tester,
+  ) async {
+    const citizen = AuthenticatedUser(
+      uuid: 'citizen-uuid-1',
+      name: 'Alex Johnson',
+      email: 'alex@waste.local',
+      roles: ['user'],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authNotifierProvider.overrideWith(
+            () => FakeAuthNotifier(AuthState.authenticated(citizen)),
+          ),
+        ],
+        child: const SmartWasteApp(),
+      ),
+    );
+
+    // Advance splash
+    await tester.pump(const Duration(milliseconds: 1300));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    // Arrived at Dashboard Screen showing user greeting
+    expect(find.text('Hello, Alex Johnson'), findsOneWidget);
+    expect(find.text('Overview Statistics'), findsOneWidget);
   });
 }

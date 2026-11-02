@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/config/app_config.dart';
 import '../../../../app/theme/app_colors.dart';
-import '../../../../core/storage/secure_storage_service.dart';
+import '../state/auth_notifier.dart';
 
-/// Foundation splash screen with branding and token check.
+/// Splash screen that initializes auth state, checks token, and validates session via GET /auth/me.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -18,19 +18,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuthentication();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startSessionCheck();
+    });
   }
 
-  Future<void> _checkAuthentication() async {
-    // Brief animation delay
-    await Future.delayed(const Duration(milliseconds: 1500));
+  Future<void> _startSessionCheck() async {
+    // Run minimal branding delay concurrently with auth verification
+    final delayFuture = Future.delayed(const Duration(milliseconds: 1200));
+    final authFuture = ref
+        .read(authNotifierProvider.notifier)
+        .checkAuthStatus();
+
+    await Future.wait([delayFuture, authFuture]);
+
     if (!mounted) return;
 
-    final storage = ref.read(secureStorageServiceProvider);
-    final hasToken = await storage.hasToken();
-
-    if (!mounted) return;
-    if (hasToken) {
+    final authState = ref.read(authNotifierProvider);
+    if (authState.isAuthenticated) {
       context.go('/dashboard');
     } else {
       context.go('/login');

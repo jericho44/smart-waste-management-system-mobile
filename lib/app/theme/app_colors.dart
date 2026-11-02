@@ -45,4 +45,3 @@ class AppColors {
   static const Color success = Color(0xFF16A34A);
   static const Color info = Color(0xFF0284C7);
 }
-

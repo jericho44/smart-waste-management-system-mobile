@@ -84,7 +84,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     // Arrived at Dashboard Screen showing user greeting
-    expect(find.text('Hello, Alex Johnson'), findsOneWidget);
-    expect(find.text('Overview Statistics'), findsOneWidget);
+    expect(find.textContaining('Hello, Alex Johnson'), findsOneWidget);
+    expect(find.text('Found an illegal dump?'), findsOneWidget);
   });
 }

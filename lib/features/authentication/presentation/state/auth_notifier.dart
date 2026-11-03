@@ -4,6 +4,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../data/models/login_request.dart';
 import '../../data/models/register_request.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../domain/models/authenticated_user.dart';
 import 'auth_state.dart';
 
 /// Riverpod Notifier managing authentication state lifecycle and session verification.
@@ -112,6 +113,11 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> handleUnauthorized() async {
     await _repository.clearLocalAuth();
     state = AuthState.unauthenticated();
+  }
+
+  /// Update current authenticated user in memory (e.g. after profile update)
+  void updateCurrentUser(AuthenticatedUser updatedUser) {
+    state = AuthState.authenticated(updatedUser);
   }
 }
 

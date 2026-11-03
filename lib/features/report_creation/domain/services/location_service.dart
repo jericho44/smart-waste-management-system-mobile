@@ -89,4 +89,3 @@ class GeolocatorLocationService implements LocationService {
 final locationServiceProvider = Provider<LocationService>((ref) {
   return const GeolocatorLocationService();
 });
-

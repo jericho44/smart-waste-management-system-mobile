@@ -238,4 +238,3 @@ class _EditProfileDialogState extends ConsumerState<EditProfileDialog> {
     );
   }
 }
-

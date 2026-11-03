@@ -31,6 +31,8 @@ class ReportsListNotifier extends Notifier<ReportsListState> {
         categoryUuid: state.selectedCategoryUuid,
       );
 
+      if (!ref.mounted) return;
+
       final pagination = response.meta?.pagination;
       final reports = response.data ?? [];
 
@@ -45,6 +47,7 @@ class ReportsListNotifier extends Notifier<ReportsListState> {
         errorMessage: null,
       );
     } on AppException catch (e) {
+      if (!ref.mounted) return;
       state = state.copyWith(
         status: ReportsListStatus.error,
         errorMessage: e.message,
@@ -52,6 +55,7 @@ class ReportsListNotifier extends Notifier<ReportsListState> {
         isLoadingMore: false,
       );
     } catch (_) {
+      if (!ref.mounted) return;
       state = state.copyWith(
         status: ReportsListStatus.error,
         errorMessage: 'Failed to load reports. Please try again.',

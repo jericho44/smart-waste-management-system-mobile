@@ -72,6 +72,8 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
     Options? options,
+    ProgressCallback? onSendProgress,
+    CancelToken? cancelToken,
   }) async {
     try {
       final response = await _dio.post(
@@ -79,6 +81,8 @@ class ApiClient {
         data: data,
         queryParameters: queryParameters,
         options: options,
+        onSendProgress: onSendProgress,
+        cancelToken: cancelToken,
       );
       return _parseResponse<T>(response, fromJson);
     } on DioException catch (e) {

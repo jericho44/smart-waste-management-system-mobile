@@ -24,10 +24,13 @@ class DashboardNotifier extends Notifier<DashboardState> {
 
     try {
       final dashboardData = await _repository.getUserDashboard();
+      if (!ref.mounted) return;
       state = DashboardState.success(dashboardData);
     } on AppException catch (e) {
+      if (!ref.mounted) return;
       state = DashboardState.error(e.message, existingData: state.data);
     } catch (e) {
+      if (!ref.mounted) return;
       state = DashboardState.error(
         'Unable to load dashboard data. Please try again.',
         existingData: state.data,

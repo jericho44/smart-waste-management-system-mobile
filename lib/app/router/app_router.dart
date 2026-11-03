@@ -10,6 +10,7 @@ import '../../features/authentication/presentation/state/auth_state.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/report_creation/presentation/screens/create_report_screen.dart';
+import '../../features/reports/presentation/screens/report_details_screen.dart';
 import '../../features/reports/presentation/screens/reports_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
 
@@ -105,6 +106,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/reports',
                 builder: (context, state) => const ReportsScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':uuid',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final uuid = state.pathParameters['uuid']!;
+                      return ReportDetailsScreen(uuid: uuid);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
